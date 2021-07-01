@@ -73,4 +73,17 @@ export class GameSubscriptions {
       }
     `;
   }
+
+  static get actionAdded(): DocumentNode {
+    return gql`
+      subscription ActionAdded($gameId: String!) {
+        actionAdded(gameId: $gameId) {
+          id
+          playerId
+          type
+          direction
+        }
+      }
+    `;
+  }
 }

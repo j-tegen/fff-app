@@ -6,6 +6,8 @@ import { IGame } from '@/types/game.type';
 import { IPlayer } from '@/types/player.type';
 import { IObjectTile } from '@/types/object-tile.type';
 import { IArrow } from '@/types/arrow.type';
+import { EErrorCode } from '@/enums/error-code.enum';
+import { IAction } from '@/types/action.type';
 
 export const namespace = 'game';
 
@@ -16,6 +18,9 @@ export interface IGameState {
   objectTiles: IObjectTile[];
   arrows: IArrow[];
   isResolving: boolean;
+  isSpectating: boolean;
+  errorCode?: EErrorCode;
+  actions: IAction[];
 }
 
 export const state: IGameState = {
@@ -25,6 +30,9 @@ export const state: IGameState = {
   objectTiles: [],
   arrows: [],
   isResolving: false,
+  isSpectating: false,
+  errorCode: undefined,
+  actions: [],
 };
 
 const namespaced: boolean = true;

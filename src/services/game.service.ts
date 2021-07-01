@@ -31,25 +31,33 @@ export class GameService {
   }
 
   public static async move(gameId: string, playerId: string, direction: EDirection): Promise<void> {
-    await apolloClient.mutate({
-      mutation: ActionMutations.move,
-      variables: {
-        gameId,
-        playerId,
-        direction,
-        type: EActionType.MOVE,
-      },
-    });
+    try {
+      await apolloClient.mutate({
+        mutation: ActionMutations.move,
+        variables: {
+          gameId,
+          playerId,
+          direction,
+          type: EActionType.MOVE,
+        },
+      });
+    } catch {
+      //
+    }
   }
 
   public static async shoot(gameId: string, playerId: string): Promise<void> {
-    await apolloClient.mutate({
-      mutation: ActionMutations.move,
-      variables: {
-        gameId,
-        playerId,
-        type: EActionType.SHOOT,
-      },
-    });
+    try {
+      await apolloClient.mutate({
+        mutation: ActionMutations.move,
+        variables: {
+          gameId,
+          playerId,
+          type: EActionType.SHOOT,
+        },
+      });
+    } catch {
+      //
+    }
   }
 }

@@ -10,12 +10,16 @@ import { PlayerService } from '@/services/player.service';
 import { IArrow } from '@/types/arrow.type';
 import { EDirection } from '@/enums/direction.enum';
 import { ActionService } from '@/services/action.service';
+import { EErrorCode } from '@/enums/error-code.enum';
+import { IAction } from '@/types/action.type';
 
 export const actions: ActionTree<IGameState, IRootState> = {
   [GameActions.RESET]({ commit }) {
     commit(GameMutations.SET_GAME, undefined);
     commit(GameMutations.SET_ME, undefined);
     commit(GameMutations.SET_PLAYERS, []);
+    commit(GameMutations.SET_IS_SPECTATING, false);
+    commit(GameMutations.SET_ACTIONS, []);
   },
   async [GameActions.CREATE_GAME]() {
     const game: IGame = await GameService.createGame();
@@ -73,12 +77,35 @@ export const actions: ActionTree<IGameState, IRootState> = {
     GameService.shoot(gameId, playerId);
   },
   [GameActions.START_RESOLVING_ACTIONS]({ commit, state }) {
-    if (state.me!.isOwner) {
+    if (state.me?.isOwner) {
       ActionService.resolveActions(state.game!.id);
     }
     commit(GameMutations.SET_RESOLVING, true);
   },
   [GameActions.END_RESOLVING_ACTIONS]({ commit }) {
     commit(GameMutations.SET_RESOLVING, false);
+    commit(GameMutations.SET_ACTIONS, []);
+  },
+  [GameActions.SPECTATE]({ commit }) {
+    commit(GameMutations.SET_IS_SPECTATING, true);
+  },
+  [GameActions.SET_ERROR]({ commit }, errorCode?: EErrorCode) {
+    commit(GameMutations.SET_ERROR, errorCode);
+  },
+  [GameActions.ADD_ACTION]({ state, commit }, action: IAction) {
+    const player: IPlayer | undefined = state.players.find(
+      (player: IPlayer) => player.id === action.playerId
+    );
+    const actions: IAction[] = [
+      ...state.actions,
+      {
+        ...action,
+        player,
+      },
+    ];
+    commit(GameMutations.SET_ACTIONS, actions);
+  },
+  [GameActions.RESET_ACTIONS]({ commit }) {
+    commit(GameMutations.SET_ACTIONS, []);
   },
 };

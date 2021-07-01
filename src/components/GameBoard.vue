@@ -7,7 +7,6 @@
       :height="boardPixels"
       @keypress="handleMove"
     />
-    {{ frameIndex }}
   </div>
 </template>
 
@@ -41,8 +40,12 @@ export default class GameBoard extends Vue {
   }
 
   handleMove(e: KeyboardEvent): void {
+    if (!this.me) {
+      return;
+    }
     switch (e.code) {
       case 'ArrowDown':
+        e.preventDefault();
         this.$emit('move', {
           playerId: this.me.id,
           gameId: this.game.id,
@@ -50,6 +53,7 @@ export default class GameBoard extends Vue {
         });
         break;
       case 'ArrowUp':
+        e.preventDefault();
         this.$emit('move', {
           playerId: this.me.id,
           gameId: this.game.id,
@@ -57,6 +61,7 @@ export default class GameBoard extends Vue {
         });
         break;
       case 'ArrowLeft':
+        e.preventDefault();
         this.$emit('move', {
           playerId: this.me.id,
           gameId: this.game.id,
@@ -64,6 +69,7 @@ export default class GameBoard extends Vue {
         });
         break;
       case 'ArrowRight':
+        e.preventDefault();
         this.$emit('move', {
           playerId: this.me.id,
           gameId: this.game.id,
@@ -71,6 +77,7 @@ export default class GameBoard extends Vue {
         });
         break;
       case 'Space':
+        e.preventDefault();
         this.$emit('shoot', {
           playerId: this.me.id,
           gameId: this.game.id,
@@ -124,24 +131,6 @@ export default class GameBoard extends Vue {
         ArrowEngine.render(this.ctx, updatedArrow);
       },
     });
-    this.$apollo.addSmartSubscription('actionsResolved', {
-      query: GameSubscriptions.actionsResolved,
-      variables: {
-        gameId: this.game.id,
-      },
-      result: () => {
-        this.$emit('actionsResolved');
-      },
-    });
-    this.$apollo.addSmartSubscription('resolveActions', {
-      query: GameSubscriptions.resolveActions,
-      variables: {
-        gameId: this.game.id,
-      },
-      result: () => {
-        this.$emit('resolveActions');
-      },
-    });
   }
 
   stopSubscriptions() {
@@ -149,12 +138,6 @@ export default class GameBoard extends Vue {
       this.$apollo.subscriptions.playerUpdated.stop();
     }
     if (this.$apollo.subscriptions.arrowUpdated) {
-      this.$apollo.subscriptions.arrowUpdated.stop();
-    }
-    if (this.$apollo.subscriptions.resolveActions) {
-      this.$apollo.subscriptions.arrowUpdated.stop();
-    }
-    if (this.$apollo.subscriptions.actionsResolved) {
       this.$apollo.subscriptions.arrowUpdated.stop();
     }
   }

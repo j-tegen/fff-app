@@ -5,6 +5,8 @@ import { IGame } from '@/types/game.type';
 import { IPlayer } from '@/types/player.type';
 import { IObjectTile } from '@/types/object-tile.type';
 import { IArrow } from '@/types/arrow.type';
+import { EErrorCode } from '@/enums/error-code.enum';
+import { IAction } from '@/types/action.type';
 
 export const mutations: MutationTree<IGameState> = {
   [GameMutations.SET_GAME](state: IGameState, game: IGame) {
@@ -24,5 +26,14 @@ export const mutations: MutationTree<IGameState> = {
   },
   [GameMutations.SET_RESOLVING](state: IGameState, isResolving: boolean) {
     state.isResolving = isResolving;
+  },
+  [GameMutations.SET_IS_SPECTATING](state: IGameState, isSpectating: boolean) {
+    state.isSpectating = isSpectating;
+  },
+  [GameMutations.SET_ERROR](state: IGameState, errorCode?: EErrorCode) {
+    state.errorCode = errorCode;
+  },
+  [GameMutations.SET_ACTIONS](state: IGameState, actions: IAction[]) {
+    state.actions = actions;
   },
 };

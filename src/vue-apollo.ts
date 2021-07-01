@@ -5,7 +5,12 @@ import { createHttpLink } from 'apollo-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { getMainDefinition } from 'apollo-utilities';
 import { ApolloClient } from 'apollo-client';
-import { split } from 'apollo-link';
+import { split, ApolloLink } from 'apollo-link';
+import { onError } from 'apollo-link-error';
+import { EErrorCode } from './enums/error-code.enum';
+import store from '@/store';
+import { GameActions } from './store/game/game.store.enums';
+import { ErrorHelper } from './utils/error-helper.util';
 
 const httpEndpoint = process.env.VUE_APP_GRAPHQL_HTTP || 'http://localhost:8090/graphql';
 
@@ -21,6 +26,19 @@ const httpLink = createHttpLink({
   uri: httpEndpoint,
 });
 
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors) {
+    graphQLErrors.map(({ message, locations, path }) => {
+      console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`);
+      const errorCode: EErrorCode = ErrorHelper.parseErrorCode(message);
+      store.dispatch(`game/${GameActions.SET_ERROR}`, errorCode);
+    });
+  }
+  if (networkError) {
+    store.dispatch(`game/${GameActions.SET_ERROR}`, EErrorCode.NETWORK_ERROR);
+  }
+});
+
 const link = split(
   // split based on operation type
   ({ query }) => {
@@ -32,7 +50,7 @@ const link = split(
 );
 
 export const apolloClient = new ApolloClient({
-  link,
+  link: ApolloLink.from([errorLink, link]),
   cache: new InMemoryCache(),
 });
 
