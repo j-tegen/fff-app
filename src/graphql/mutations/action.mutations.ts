@@ -18,4 +18,22 @@ export class ActionMutations {
       }
     `;
   }
+
+  static get shoot(): DocumentNode {
+    return gql`
+      mutation Shoot($gameId: String!, $playerId: String!, $type: ActionType!) {
+        addAction(payload: { gameId: $gameId, playerId: $playerId, type: $type }) {
+          id
+        }
+      }
+    `;
+  }
+
+  static get resolveActions(): DocumentNode {
+    return gql`
+      mutation ResolveActions($gameId: String!) {
+        resolveActions(gameId: $gameId)
+      }
+    `;
+  }
 }

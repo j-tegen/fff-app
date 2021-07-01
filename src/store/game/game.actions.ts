@@ -9,6 +9,7 @@ import { IPlayer } from '@/types/player.type';
 import { PlayerService } from '@/services/player.service';
 import { IArrow } from '@/types/arrow.type';
 import { EDirection } from '@/enums/direction.enum';
+import { ActionService } from '@/services/action.service';
 
 export const actions: ActionTree<IGameState, IRootState> = {
   [GameActions.RESET]({ commit }) {
@@ -67,5 +68,17 @@ export const actions: ActionTree<IGameState, IRootState> = {
     { gameId, playerId, direction }: { gameId: string; playerId: string; direction: EDirection }
   ) {
     GameService.move(gameId, playerId, direction);
+  },
+  [GameActions.SHOOT](_, { gameId, playerId }: { gameId: string; playerId: string }) {
+    GameService.shoot(gameId, playerId);
+  },
+  [GameActions.START_RESOLVING_ACTIONS]({ commit, state }) {
+    if (state.me!.isOwner) {
+      ActionService.resolveActions(state.game!.id);
+    }
+    commit(GameMutations.SET_RESOLVING, true);
+  },
+  [GameActions.END_RESOLVING_ACTIONS]({ commit }) {
+    commit(GameMutations.SET_RESOLVING, false);
   },
 };

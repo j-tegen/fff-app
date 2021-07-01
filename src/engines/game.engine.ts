@@ -26,10 +26,11 @@ export class GameEngine {
     ctx: CanvasRenderingContext2D,
     objectTiles: IObjectTile[],
     players: IPlayer[],
-    frameIndex: number = 0
+    frameIndex: number = 0,
+    isResolving: boolean = false
   ): void {
     this.animateObjectTiles(ctx, objectTiles, frameIndex);
-    this.animatePlayers(ctx, players, frameIndex);
+    this.animatePlayers(ctx, players, frameIndex, isResolving);
   }
 
   static clearTile(
@@ -59,10 +60,13 @@ export class GameEngine {
   static animatePlayers(
     ctx: CanvasRenderingContext2D,
     players: IPlayer[],
-    frameIndex: number
+    frameIndex: number,
+    isResolving: boolean = false
   ): void {
     players.forEach((player: IPlayer) => {
-      this.clearTile(ctx, player.tile, [], [], frameIndex, player.id);
+      if (!isResolving) {
+        this.clearTile(ctx, player.tile, [], [], frameIndex, player.id);
+      }
       PlayerEngine.render(ctx, player, frameIndex);
     });
   }

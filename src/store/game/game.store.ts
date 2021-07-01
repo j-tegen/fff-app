@@ -15,6 +15,7 @@ export interface IGameState {
   me?: IPlayer;
   objectTiles: IObjectTile[];
   arrows: IArrow[];
+  isResolving: boolean;
 }
 
 export const state: IGameState = {
@@ -23,6 +24,7 @@ export const state: IGameState = {
   me: undefined,
   objectTiles: [],
   arrows: [],
+  isResolving: false,
 };
 
 const namespaced: boolean = true;

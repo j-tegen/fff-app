@@ -31,6 +31,7 @@ export default class GameBoard extends Vue {
   @Prop() arrows!: IArrow[];
   @Prop() objectTiles!: IObjectTile[];
   @Prop() me!: IPlayer;
+  @Prop() isResolving!: boolean;
 
   ctx!: CanvasRenderingContext2D;
   frameIndex: number = 0;
@@ -70,6 +71,10 @@ export default class GameBoard extends Vue {
         });
         break;
       case 'Space':
+        this.$emit('shoot', {
+          playerId: this.me.id,
+          gameId: this.game.id,
+        });
         break;
     }
   }
@@ -85,6 +90,7 @@ export default class GameBoard extends Vue {
         const player: IPlayer | undefined = this.players.find(
           (player: IPlayer) => player.id === updatedPlayer.id
         );
+        this.$emit('updatePlayer', updatedPlayer);
         GameEngine.clearTile(
           this.ctx,
           player!.tile,
@@ -93,7 +99,6 @@ export default class GameBoard extends Vue {
           this.frameIndex,
           player!.id
         );
-        this.$emit('updatePlayer', updatedPlayer);
       },
     });
     this.$apollo.addSmartSubscription('arrowUpdated', {
@@ -119,6 +124,24 @@ export default class GameBoard extends Vue {
         ArrowEngine.render(this.ctx, updatedArrow);
       },
     });
+    this.$apollo.addSmartSubscription('actionsResolved', {
+      query: GameSubscriptions.actionsResolved,
+      variables: {
+        gameId: this.game.id,
+      },
+      result: () => {
+        this.$emit('actionsResolved');
+      },
+    });
+    this.$apollo.addSmartSubscription('resolveActions', {
+      query: GameSubscriptions.resolveActions,
+      variables: {
+        gameId: this.game.id,
+      },
+      result: () => {
+        this.$emit('resolveActions');
+      },
+    });
   }
 
   stopSubscriptions() {
@@ -128,10 +151,22 @@ export default class GameBoard extends Vue {
     if (this.$apollo.subscriptions.arrowUpdated) {
       this.$apollo.subscriptions.arrowUpdated.stop();
     }
+    if (this.$apollo.subscriptions.resolveActions) {
+      this.$apollo.subscriptions.arrowUpdated.stop();
+    }
+    if (this.$apollo.subscriptions.actionsResolved) {
+      this.$apollo.subscriptions.arrowUpdated.stop();
+    }
   }
 
   renderLoop() {
-    GameEngine.renderLoop(this.ctx, this.objectTiles, this.players, this.frameIndex);
+    GameEngine.renderLoop(
+      this.ctx,
+      this.objectTiles,
+      this.players,
+      this.frameIndex,
+      this.isResolving
+    );
     setTimeout(() => {
       this.frameIndex = this.frameIndex === 3 ? 0 : this.frameIndex + 1;
       this.renderLoop();

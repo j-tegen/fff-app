@@ -38,6 +38,7 @@ export class GameSubscriptions {
       }
     `;
   }
+
   static get arrowUpdated(): DocumentNode {
     return gql`
       subscription ArrowUpdated($gameId: String!) {
@@ -48,6 +49,26 @@ export class GameSubscriptions {
           }
           id
           direction
+        }
+      }
+    `;
+  }
+
+  static get actionsResolved(): DocumentNode {
+    return gql`
+      subscription ActionsResolved($gameId: String!) {
+        actionsResolved(gameId: $gameId) {
+          id
+        }
+      }
+    `;
+  }
+
+  static get resolveActions(): DocumentNode {
+    return gql`
+      subscription ResolveActions($gameId: String!) {
+        resolveActions(gameId: $gameId) {
+          id
         }
       }
     `;

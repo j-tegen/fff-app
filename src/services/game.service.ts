@@ -41,4 +41,15 @@ export class GameService {
       },
     });
   }
+
+  public static async shoot(gameId: string, playerId: string): Promise<void> {
+    await apolloClient.mutate({
+      mutation: ActionMutations.move,
+      variables: {
+        gameId,
+        playerId,
+        type: EActionType.SHOOT,
+      },
+    });
+  }
 }

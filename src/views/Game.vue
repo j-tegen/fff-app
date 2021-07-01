@@ -15,17 +15,21 @@
           :object-tiles="objectTiles"
           :players="players"
           :arrows="arrows"
+          :is-resolving="isResolving"
           @updatePlayer="handleUpdatePlayer"
           @updateArrows="handleUpdateArrows"
           @move="handleMove"
+          @shoot="handleShoot"
+          @resolveActions="handleResolveActions"
+          @actionsResolved="handleActionsResolved"
         />
-        <div v-if="!!players.length" class="status-board">
+        <!-- <div v-if="!!players.length" class="status-board">
           <ul>
             <li v-for="player of players" :key="player.id">
               {{ player.name }}, ({{ player.colour }}) is {{ player.isDead ? 'DEAD' : 'ALIVE' }}!
             </li>
           </ul>
-        </div>
+        </div> -->
       </template>
     </div>
   </div>
@@ -54,6 +58,7 @@ export default class Game extends Vue {
   @State('arrows', { namespace: 'game' }) arrows!: IArrow[];
   @State('objectTiles', { namespace: 'game' }) objectTiles!: IObjectTile[];
   @State('me', { namespace: 'game' }) me?: IPlayer;
+  @State('isResolving', { namespace: 'game' }) isResolving!: boolean;
 
   @Action(GameActions.LOAD_GAME, { namespace: 'game' }) loadGame: any;
   @Action(GameActions.ADD_PLAYER, { namespace: 'game' }) addPlayer: any;
@@ -61,6 +66,11 @@ export default class Game extends Vue {
   @Action(GameActions.UPDATE_ARROWS, { namespace: 'game' }) updateArrows: any;
   @Action(GameActions.SET_ME, { namespace: 'game' }) setMe: any;
   @Action(GameActions.MOVE, { namespace: 'game' }) move: any;
+  @Action(GameActions.SHOOT, { namespace: 'game' }) shoot: any;
+  @Action(GameActions.START_RESOLVING_ACTIONS, { namespace: 'game' })
+  resolveActions: any;
+  @Action(GameActions.END_RESOLVING_ACTIONS, { namespace: 'game' })
+  actionsResolved: any;
 
   name: string = '';
 
@@ -99,8 +109,20 @@ export default class Game extends Vue {
     }
   }
 
+  handleActionsResolved(): void {
+    this.actionsResolved();
+  }
+
+  handleResolveActions(): void {
+    this.resolveActions();
+  }
+
   handleMove(payload: { playerId: string; gameId: string; direction: EDirection }) {
     this.move(payload);
+  }
+
+  handleShoot(payload: { playerId: string; gameId: string }) {
+    this.shoot(payload);
   }
 
   handleUpdateArrows(arrow: IArrow): void {
