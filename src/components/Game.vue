@@ -24,6 +24,8 @@
         :players="players"
         :actions="actions"
         :is-resolving="isResolving"
+        :active-round="activeRound"
+        @startRound="handleStartRound"
       />
     </v-col>
   </v-row>
@@ -39,6 +41,7 @@ import { IPlayer } from '@/types/player.type';
 import { EDirection } from '@/enums/direction.enum';
 import { IObjectTile } from '@/types/object-tile.type';
 import { IAction } from '@/types/action.type';
+import { IGameRound } from '@/types/game-round.type';
 
 @Component({
   components: {
@@ -54,9 +57,14 @@ export default class Game extends Vue {
   @Prop() arrows!: IArrow[];
   @Prop() actions!: IAction[];
   @Prop() isResolving!: boolean;
+  @Prop() activeRound?: IGameRound;
 
   get showGame(): boolean {
     return !!this.game && !!this.players.length;
+  }
+
+  handleStartRound(playerId: string): void {
+    this.$emit('startRound', playerId);
   }
 
   handleUpdatePlayer(player: IPlayer): void {

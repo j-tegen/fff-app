@@ -11,4 +11,11 @@ export class GameMutations {
       }
     `;
   }
+  static get resetGame(): DocumentNode {
+    return gql`
+      mutation ResetGame($gameId: String!, $playerId: String!) {
+        resetGame(payload: { gameId: $gameId, playerId: $playerId })
+      }
+    `;
+  }
 }

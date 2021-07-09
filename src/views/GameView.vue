@@ -5,6 +5,7 @@
         v-if="!hasJoined"
         :me="me"
         :players="players"
+        :active-round="activeRound"
         @addPlayer="handleAddPlayer"
         @spectate="handleSpectate"
       />
@@ -17,8 +18,10 @@
         :arrows="arrows"
         :is-resolving="isResolving"
         :actions="actions"
+        :active-round="activeRound"
         @updatePlayer="handleUpdatePlayer"
         @updateArrows="handleUpdateArrows"
+        @startRound="startRound"
         @move="handleMove"
         @shoot="handleShoot"
       />
@@ -28,25 +31,39 @@
         :me="me"
         :actions="actions"
         :players="players"
+        :active-round="activeRound"
         @move="handleMove"
         @shoot="handleShoot"
+        @startRound="startRound"
         @updatePlayer="handleUpdatePlayer"
         @updateArrows="handleUpdateArrows"
       />
     </template>
     <v-row xs="12" md="6" v-else> Weird, couldn't find the game! </v-row>
     <SpectatingSnackbar v-if="isSpectating && !me" />
-    <ErrorMessage v-if="errorCode" :error-code="errorCode" @resetError="handleResetError" />
+    <Message v-if="message" :message="message" :top="true" @resetMessage="handleResetMessage" />
+    <Message
+      v-if="errorCode"
+      :error-code="errorCode"
+      :bottom="true"
+      @resetError="handleResetError"
+    />
+    <GameOverModal
+      v-if="showGameOverModal"
+      :winner="activeRound.winner"
+      @close="handleCloseGameOverModal"
+    />
   </v-container>
 </template>
 
 <script lang="ts">
 import { GameActions } from '@/store/game/game.store.enums';
 import Game from '@/components/Game.vue';
+import GameOverModal from '@/components/GameOverModal.vue';
 import JoinGame from '@/components/JoinGame.vue';
 import MobileGame from '@/components/MobileGame.vue';
 import SpectatingSnackbar from '@/components/SpectatingSnackbar.vue';
-import ErrorMessage from '@/components/ErrorMessage.vue';
+import Message from '@/components/Message.vue';
 import { IGame } from '@/types/game.type';
 import { IPlayer } from '@/types/player.type';
 import { Vue, Component, Watch } from 'vue-property-decorator';
@@ -57,6 +74,7 @@ import { IArrow } from '@/types/arrow.type';
 import { EDirection } from '@/enums/direction.enum';
 import { EErrorCode } from '@/enums/error-code.enum';
 import { IAction } from '@/types/action.type';
+import { IGameRound } from '@/types/game-round.type';
 
 @Component({
   components: {
@@ -64,7 +82,8 @@ import { IAction } from '@/types/action.type';
     JoinGame,
     MobileGame,
     SpectatingSnackbar,
-    ErrorMessage,
+    Message,
+    GameOverModal,
   },
 })
 export default class GameView extends Vue {
@@ -77,6 +96,8 @@ export default class GameView extends Vue {
   @State('isSpectating', { namespace: 'game' }) isSpectating!: boolean;
   @State('errorCode', { namespace: 'game' }) errorCode!: EErrorCode;
   @State('actions', { namespace: 'game' }) actions!: IAction[];
+  @State('message', { namespace: 'game' }) message?: string;
+  @State('activeRound', { namespace: 'game' }) activeRound?: IGameRound;
 
   @Action(GameActions.LOAD_GAME, { namespace: 'game' }) loadGame: any;
   @Action(GameActions.ADD_PLAYER, { namespace: 'game' }) addPlayer: any;
@@ -93,8 +114,12 @@ export default class GameView extends Vue {
   spectate: any;
   @Action(GameActions.SET_ERROR, { namespace: 'game' }) setError: any;
   @Action(GameActions.ADD_ACTION, { namespace: 'game' }) addAction: any;
+  @Action(GameActions.SET_MESSAGE, { namespace: 'game' }) setMessage: any;
+  @Action(GameActions.START_ROUND, { namespace: 'game' }) startRound: any;
+  @Action(GameActions.SET_WINNER, { namespace: 'game' }) setWinner: any;
 
   name: string = '';
+  showGameOverModal: boolean = false;
 
   get hasJoined(): boolean {
     return !!this.me || this.isSpectating;
@@ -106,6 +131,10 @@ export default class GameView extends Vue {
     if (player) {
       this.setMe(player);
     }
+  }
+
+  handleCloseGameOverModal(): void {
+    this.showGameOverModal = false;
   }
 
   addSubscriptions(gameId: string) {
@@ -146,9 +175,30 @@ export default class GameView extends Vue {
         this.handleResolveActions();
       },
     });
+    this.$apollo.addSmartSubscription('gameOver', {
+      query: GameSubscriptions.gameOver,
+      variables: {
+        gameId: this.game!.id,
+      },
+      result: ({ data }: any) => {
+        const {
+          gameOver: { winner },
+        } = data;
+        this.handleGameOver(winner);
+      },
+    });
+    this.$apollo.addSmartSubscription('gameReset', {
+      query: GameSubscriptions.gameReset,
+      variables: {
+        gameId: this.game!.id,
+      },
+      result: () => {
+        window.location.reload();
+      },
+    });
   }
 
-  stopSubscriptions() {
+  stopSubscriptions(): void {
     if (this.$apollo.subscriptions.playerAdded) {
       this.$apollo.subscriptions.playerAdded.stop();
     }
@@ -156,11 +206,30 @@ export default class GameView extends Vue {
       this.$apollo.subscriptions.actionAdded.stop();
     }
     if (this.$apollo.subscriptions.resolveActions) {
-      this.$apollo.subscriptions.arrowUpdated.stop();
+      this.$apollo.subscriptions.resolveActions.stop();
     }
     if (this.$apollo.subscriptions.actionsResolved) {
-      this.$apollo.subscriptions.arrowUpdated.stop();
+      this.$apollo.subscriptions.actionsResolved.stop();
     }
+    if (this.$apollo.subscriptions.gameOver) {
+      this.$apollo.subscriptions.gameOver.stop();
+    }
+    if (this.$apollo.subscriptions.gameReset) {
+      this.$apollo.subscriptions.gameReset.stop();
+    }
+  }
+
+  handleStartRound(playerId: string): void {
+    this.startRound(playerId);
+  }
+
+  handleResetMessage(): void {
+    this.setMessage(undefined);
+  }
+
+  handleGameOver(winner?: IPlayer): void {
+    this.setWinner(winner);
+    this.showGameOverModal = true;
   }
 
   handleResetError(): void {

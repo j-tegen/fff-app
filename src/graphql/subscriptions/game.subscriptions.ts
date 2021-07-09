@@ -86,4 +86,29 @@ export class GameSubscriptions {
       }
     `;
   }
+
+  static get gameOver(): DocumentNode {
+    return gql`
+      subscription GameOver($gameId: String!) {
+        gameOver(gameId: $gameId) {
+          id
+          roundOver
+          winner {
+            id
+            name
+          }
+        }
+      }
+    `;
+  }
+
+  static get gameReset(): DocumentNode {
+    return gql`
+      subscription GameReset($gameId: String!) {
+        gameReset(gameId: $gameId) {
+          id
+        }
+      }
+    `;
+  }
 }

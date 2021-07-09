@@ -8,6 +8,7 @@ import { IObjectTile } from '@/types/object-tile.type';
 import { IArrow } from '@/types/arrow.type';
 import { EErrorCode } from '@/enums/error-code.enum';
 import { IAction } from '@/types/action.type';
+import { IGameRound } from '@/types/game-round.type';
 
 export const namespace = 'game';
 
@@ -21,6 +22,8 @@ export interface IGameState {
   isSpectating: boolean;
   errorCode?: EErrorCode;
   actions: IAction[];
+  message?: string;
+  activeRound?: IGameRound;
 }
 
 export const state: IGameState = {
@@ -33,6 +36,8 @@ export const state: IGameState = {
   isSpectating: false,
   errorCode: undefined,
   actions: [],
+  message: undefined,
+  activeRound: undefined,
 };
 
 const namespaced: boolean = true;

@@ -1,6 +1,15 @@
 <template>
   <v-card class="mb-4">
-    <v-card-title> Game information </v-card-title>
+    <v-card-title>
+      Game information
+      <v-spacer />
+      <template v-if="isOwner">
+        <v-btn outlined color="primary" :disabled="isDisabled" @click="handleStartRound">
+          {{ startButtonText }}</v-btn
+        >
+      </template>
+      <span v-else-if="isRoundOver" class="text-subtitle-1 font-italic">Waiting for new round</span>
+    </v-card-title>
     <v-card-text>
       <v-list-item>
         <v-list-item-avatar>
@@ -38,6 +47,7 @@
 </template>
 
 <script lang="ts">
+import { IGameRound } from '@/types/game-round.type';
 import { IGame } from '@/types/game.type';
 import { IPlayer } from '@/types/player.type';
 import { Component, Prop, Vue } from 'vue-property-decorator';
@@ -46,13 +56,52 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 export default class PlayerListCard extends Vue {
   @Prop() players!: IPlayer[];
   @Prop() game!: IGame;
+  @Prop() me?: IPlayer;
+  @Prop() activeRound?: IGameRound;
 
   isCopied: boolean = false;
   copyTimeout: number = 2000;
 
+  get isRoundOver(): boolean {
+    return !!this.activeRound?.roundOver;
+  }
+
+  get isDisabled(): boolean {
+    if (!this.activeRound) {
+      return false;
+    }
+    return !this.isRoundOver;
+  }
+
+  get disableStartButton(): boolean {
+    if (!this.activeRound) {
+      return false;
+    } else if (this.activeRound.roundOver) {
+      return false;
+    }
+    return true;
+  }
+
+  get startButtonText(): string {
+    if (!this.activeRound) {
+      return 'Start!';
+    }
+    return 'Start new round!';
+  }
+
+  get isOwner(): boolean {
+    return !!this.me?.isOwner;
+  }
+
   get url(): string {
     const { origin, pathname } = window.location;
     return `${origin}${pathname}`;
+  }
+
+  handleStartRound(): void {
+    if (this.me) {
+      this.$emit('startRound', this.me.id);
+    }
   }
 
   handleCopyUrl(): void {

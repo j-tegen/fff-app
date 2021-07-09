@@ -7,6 +7,7 @@ import { IObjectTile } from '@/types/object-tile.type';
 import { IArrow } from '@/types/arrow.type';
 import { EErrorCode } from '@/enums/error-code.enum';
 import { IAction } from '@/types/action.type';
+import { IGameRound } from '@/types/game-round.type';
 
 export const mutations: MutationTree<IGameState> = {
   [GameMutations.SET_GAME](state: IGameState, game: IGame) {
@@ -35,5 +36,14 @@ export const mutations: MutationTree<IGameState> = {
   },
   [GameMutations.SET_ACTIONS](state: IGameState, actions: IAction[]) {
     state.actions = actions;
+  },
+  [GameMutations.SET_MESSAGE](state: IGameState, message?: string) {
+    state.message = message;
+  },
+  [GameMutations.SET_ACTIVE_ROUND](state: IGameState, round?: IGameRound) {
+    state.activeRound = round;
+  },
+  [GameMutations.SET_WINNER](state: IGameState, winner?: IPlayer) {
+    state.activeRound!.winner = winner;
   },
 };

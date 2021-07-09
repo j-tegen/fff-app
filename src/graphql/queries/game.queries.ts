@@ -33,6 +33,14 @@ export class GameQueries {
             isLethal
             isBlocking
           }
+          activeRound {
+            id
+            roundOver
+            winner {
+              id
+              name
+            }
+          }
         }
       }
     `;

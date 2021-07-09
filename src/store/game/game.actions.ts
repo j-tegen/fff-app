@@ -12,6 +12,7 @@ import { EDirection } from '@/enums/direction.enum';
 import { ActionService } from '@/services/action.service';
 import { EErrorCode } from '@/enums/error-code.enum';
 import { IAction } from '@/types/action.type';
+import { IGameRound } from '@/types/game-round.type';
 
 export const actions: ActionTree<IGameState, IRootState> = {
   [GameActions.RESET]({ commit }) {
@@ -21,15 +22,19 @@ export const actions: ActionTree<IGameState, IRootState> = {
     commit(GameMutations.SET_IS_SPECTATING, false);
     commit(GameMutations.SET_ACTIONS, []);
   },
-  async [GameActions.CREATE_GAME]() {
-    const game: IGame = await GameService.createGame();
+  async [GameActions.CREATE_GAME](
+    _,
+    { isPublic, boardSize }: { isPublic: boolean; boardSize: number }
+  ) {
+    const game: IGame = await GameService.createGame(isPublic, boardSize);
     router.push(`/game/${game.id}`);
   },
   async [GameActions.LOAD_GAME]({ commit }, id: string) {
-    const { players, objectTiles, ...game }: IGame = await GameService.getGame(id);
+    const { players, objectTiles, activeRound, ...game }: IGame = await GameService.getGame(id);
     commit(GameMutations.SET_GAME, game);
     commit(GameMutations.SET_PLAYERS, players);
     commit(GameMutations.SET_OBJECT_TILES, objectTiles);
+    commit(GameMutations.SET_ACTIVE_ROUND, activeRound);
   },
   async [GameActions.ADD_PLAYER](
     { commit, state },
@@ -82,9 +87,12 @@ export const actions: ActionTree<IGameState, IRootState> = {
     }
     commit(GameMutations.SET_RESOLVING, true);
   },
-  [GameActions.END_RESOLVING_ACTIONS]({ commit }) {
+  [GameActions.END_RESOLVING_ACTIONS]({ commit, state, dispatch }) {
     commit(GameMutations.SET_RESOLVING, false);
     commit(GameMutations.SET_ACTIONS, []);
+    if (!state.activeRound?.winner) {
+      dispatch(GameActions.SET_MESSAGE, 'Round ended, continue playing!');
+    }
   },
   [GameActions.SPECTATE]({ commit }) {
     commit(GameMutations.SET_IS_SPECTATING, true);
@@ -107,5 +115,21 @@ export const actions: ActionTree<IGameState, IRootState> = {
   },
   [GameActions.RESET_ACTIONS]({ commit }) {
     commit(GameMutations.SET_ACTIONS, []);
+  },
+  [GameActions.SET_MESSAGE]({ commit }, message?: string) {
+    commit(GameMutations.SET_MESSAGE, message);
+  },
+  async [GameActions.START_ROUND]({ commit, state }, playerId: string) {
+    if (state.activeRound) {
+      await GameService.resetGame(state.game!.id, playerId);
+    }
+    const round: IGameRound | undefined = await GameService.startRound(state.game!.id, playerId);
+    commit(GameMutations.SET_ACTIVE_ROUND, round);
+  },
+  [GameActions.SET_WINNER]({ commit, state }, winner?: IPlayer) {
+    if (state.activeRound) {
+      const activeRound: IGameRound | undefined = { ...state.activeRound, roundOver: true, winner };
+      commit(GameMutations.SET_ACTIVE_ROUND, activeRound);
+    }
   },
 };
